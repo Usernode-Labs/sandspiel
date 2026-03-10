@@ -56,6 +56,10 @@ static EMPTY_CELL: Cell = Cell {
     clock: 0,
 };
 
+pub const FLAG_OPEN_BOTTOM: u32 = 1;
+pub const FLAG_SOURCES: u32 = 2;
+pub const FLAG_PLANT_ABSORBS: u32 = 4;
+
 #[wasm_bindgen]
 pub struct Universe {
     width: i32,
@@ -66,6 +70,7 @@ pub struct Universe {
     burns: Vec<Wind>,
     generation: u8,
     rng: SplitMix64,
+    pub flags: u32,
 }
 
 pub struct SandApi<'a> {
@@ -81,7 +86,18 @@ impl<'a> SandApi<'a> {
         }
         let nx = self.x + dx;
         let ny = self.y + dy;
-        if nx < 0 || nx > self.universe.width - 1 || ny < 0 || ny > self.universe.height - 1 {
+        if nx < 0 || nx > self.universe.width - 1 || ny < 0 {
+            return Cell {
+                species: Species::Wall,
+                ra: 0,
+                rb: 0,
+                clock: self.universe.generation,
+            };
+        }
+        if ny > self.universe.height - 1 {
+            if self.universe.flags & FLAG_OPEN_BOTTOM != 0 {
+                return EMPTY_CELL;
+            }
             return Cell {
                 species: Species::Wall,
                 ra: 0,
@@ -300,6 +316,10 @@ impl Universe {
         self.undo_stack.clear();
     }
 
+    pub fn set_flags(&mut self, flags: u32) {
+        self.flags = flags;
+    }
+
     pub fn new(width: i32, height: i32) -> Universe {
         let cells = (0..width * height).map(|_i| EMPTY_CELL).collect();
         let winds: Vec<Wind> = (0..width * height)
@@ -329,6 +349,7 @@ impl Universe {
             winds,
             generation: 0,
             rng,
+            flags: 0,
         }
     }
 }
@@ -363,6 +384,10 @@ impl Universe {
             Species::Empty => 500,
             Species::Wall => 500,
             Species::Cloner => 500,
+            Species::Spout => 500,
+            Species::SandSource => 500,
+            Species::Torch => 500,
+            Species::OilWell => 500,
 
             Species::Stone => 70,
             Species::Wood => 70,

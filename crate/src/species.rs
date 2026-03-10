@@ -3,6 +3,7 @@ use Cell;
 use SandApi;
 use Wind;
 use EMPTY_CELL;
+use {FLAG_SOURCES, FLAG_PLANT_ABSORBS};
 
 // use std::cmp;
 use std::mem;
@@ -34,6 +35,10 @@ pub enum Species {
     Dust = 14,
     Oil = 16,
     Rocket = 17,
+    Spout = 20,
+    SandSource = 21,
+    Torch = 22,
+    OilWell = 23,
 }
 
 impl Species {
@@ -52,16 +57,16 @@ impl Species {
             Species::Wood => update_wood(cell, api),
             Species::Lava => update_lava(cell, api),
             Species::Ice => update_ice(cell, api),
-            // Species::Snow => update_ice(cell, api),
-            //lightning
-            // Species::Sink => update_sink(cell, api),
             Species::Plant => update_plant(cell, api),
             Species::Acid => update_acid(cell, api),
             Species::Mite => update_mite(cell, api),
             Species::Oil => update_oil(cell, api),
             Species::Fungus => update_fungus(cell, api),
             Species::Seed => update_seed(cell, api),
-            // Species::X => update_x(cell, api),
+            Species::Spout => update_spout(cell, api),
+            Species::SandSource => update_sand_source(cell, api),
+            Species::Torch => update_torch(cell, api),
+            Species::OilWell => update_oil_well(cell, api),
         }
     }
 }
@@ -619,6 +624,19 @@ pub fn update_fire(cell: Cell, mut api: SandApi) {
             density: 40,
         });
     }
+    if api.get(dx, dy).species == Species::Plant && api.once_in(3) {
+        let fire_ra = 80 + api.rand_int(40) as u8;
+        api.set(
+            dx,
+            dy,
+            Cell {
+                species: Species::Fire,
+                ra: fire_ra,
+                rb: 0,
+                clock: 0,
+            },
+        );
+    }
     if ra < 5 || api.get(dx, dy).species == Species::Water {
         api.set(0, 0, EMPTY_CELL);
     } else if api.get(dx, dy).species == Species::Empty {
@@ -801,6 +819,24 @@ pub fn update_ice(cell: Cell, mut api: SandApi) {
 
 pub fn update_plant(cell: Cell, mut api: SandApi) {
     let rb = cell.rb;
+
+    if rb == 0 && api.universe.flags & FLAG_PLANT_ABSORBS != 0 && api.once_in(3) {
+        let (adx, ady) = api.rand_vec_8();
+        if api.get(adx, ady).species == Species::Water {
+            let drift = api.rand_int(15) - 7;
+            let newra = (cell.ra as i32 + drift) as u8;
+            api.set(
+                adx,
+                ady,
+                Cell {
+                    species: Species::Plant,
+                    ra: newra,
+                    rb: 0,
+                    clock: 0,
+                },
+            );
+        }
+    }
 
     let mut i = api.rand_int(100);
     let (dx, dy) = api.rand_vec();
@@ -1291,4 +1327,55 @@ pub fn update_mite(cell: Cell, mut api: SandApi) {
             }
         }
     }
+}
+
+pub fn update_spout(cell: Cell, mut api: SandApi) {
+    if api.universe.flags & FLAG_SOURCES == 0 { return; }
+    if api.once_in(4) {
+        if api.get(0, 1).species == Species::Empty {
+            api.set(0, 1, Cell::new(Species::Water));
+        }
+    }
+    api.set(0, 0, cell);
+}
+
+pub fn update_sand_source(cell: Cell, mut api: SandApi) {
+    if api.universe.flags & FLAG_SOURCES == 0 { return; }
+    if api.once_in(4) {
+        if api.get(0, 1).species == Species::Empty {
+            api.set(0, 1, Cell::new(Species::Sand));
+        }
+    }
+    api.set(0, 0, cell);
+}
+
+pub fn update_torch(cell: Cell, mut api: SandApi) {
+    if api.universe.flags & FLAG_SOURCES == 0 { return; }
+    if api.once_in(4) {
+        let ra = 80 + api.rand_int(40) as u8;
+        let (dx, dy) = api.rand_vec_8();
+        if api.get(dx, dy).species == Species::Empty {
+            api.set(
+                dx,
+                dy,
+                Cell {
+                    species: Species::Fire,
+                    ra,
+                    rb: 0,
+                    clock: 0,
+                },
+            );
+        }
+    }
+    api.set(0, 0, cell);
+}
+
+pub fn update_oil_well(cell: Cell, mut api: SandApi) {
+    if api.universe.flags & FLAG_SOURCES == 0 { return; }
+    if api.once_in(4) {
+        if api.get(0, 1).species == Species::Empty {
+            api.set(0, 1, Cell::new(Species::Oil));
+        }
+    }
+    api.set(0, 0, cell);
 }
