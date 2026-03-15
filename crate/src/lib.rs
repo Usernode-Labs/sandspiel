@@ -320,6 +320,22 @@ impl Universe {
         self.flags = flags;
     }
 
+    pub fn generation(&self) -> u8 {
+        self.generation
+    }
+
+    pub fn set_generation(&mut self, gen: u8) {
+        self.generation = gen;
+    }
+
+    pub fn rng_state(&self) -> u64 {
+        unsafe { *(&self.rng as *const SplitMix64 as *const u64) }
+    }
+
+    pub fn set_rng_state(&mut self, state: u64) {
+        unsafe { *(&mut self.rng as *mut SplitMix64 as *mut u64) = state }
+    }
+
     pub fn new(width: i32, height: i32) -> Universe {
         let cells = (0..width * height).map(|_i| EMPTY_CELL).collect();
         let winds: Vec<Wind> = (0..width * height)
