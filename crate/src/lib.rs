@@ -246,6 +246,12 @@ impl Universe {
         self.generation = self.generation.wrapping_add(1);
     }
 
+    pub fn tick_n(&mut self, count: i32) {
+        for _ in 0..count {
+            self.tick();
+        }
+    }
+
     pub fn width(&self) -> i32 {
         self.width
     }
