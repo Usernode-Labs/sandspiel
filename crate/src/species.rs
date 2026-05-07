@@ -41,6 +41,7 @@ pub enum Species {
     OilWell = 23,
     GasSource = 24,
     AcidSource = 25,
+    BlackHole = 26,
 }
 
 impl Species {
@@ -71,6 +72,7 @@ impl Species {
             Species::OilWell => update_oil_well(cell, api),
             Species::GasSource => update_gas_source(cell, api),
             Species::AcidSource => update_acid_source(cell, api),
+            Species::BlackHole => update_black_hole(cell, api),
         }
     }
 }
@@ -1391,6 +1393,23 @@ pub fn update_acid_source(cell: Cell, mut api: SandApi) {
         if api.get(0, 1).species == Species::Empty {
             api.set(0, 1, Cell::new(Species::Acid));
         }
+    }
+    api.set(0, 0, cell);
+}
+
+pub fn update_black_hole(cell: Cell, mut api: SandApi) {
+    if api.universe.flags & FLAG_SOURCES == 0 { return; }
+    // Sample one of the 8 neighbors and erase it. Wall cells and other
+    // BlackHole cells are spared so users can build funnels/containers
+    // around a black hole and so two adjacent black holes don't eat
+    // each other on alternating ticks.
+    let (dx, dy) = api.rand_vec_8();
+    let nbr = api.get(dx, dy);
+    if nbr.species != Species::Empty
+        && nbr.species != Species::Wall
+        && nbr.species != Species::BlackHole
+    {
+        api.set(dx, dy, EMPTY_CELL);
     }
     api.set(0, 0, cell);
 }
