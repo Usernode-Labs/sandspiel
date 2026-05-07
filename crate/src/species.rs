@@ -773,8 +773,6 @@ pub fn update_wood(cell: Cell, mut api: SandApi) {
 pub fn update_ice(cell: Cell, mut api: SandApi) {
     let (dx, dy) = api.rand_vec();
 
-    let i = api.rand_int(100);
-
     let fluid = api.get_fluid();
 
     if fluid.pressure > 120 && api.rand_int(1) == 0 {
@@ -791,6 +789,9 @@ pub fn update_ice(cell: Cell, mut api: SandApi) {
         return;
     }
 
+    // Ice is a passive solid: it melts under high pressure or against
+    // heat (fire/lava), but it does NOT actively freeze adjacent water.
+    // Drawing an ice cube into water leaves the surrounding water liquid.
     let nbr_species = api.get(dx, dy).species;
     if nbr_species == Species::Fire || nbr_species == Species::Lava {
         api.set(
@@ -798,17 +799,6 @@ pub fn update_ice(cell: Cell, mut api: SandApi) {
             0,
             Cell {
                 species: Species::Water,
-                ra: cell.ra,
-                rb: cell.rb,
-                clock: 0,
-            },
-        );
-    } else if nbr_species == Species::Water && i < 7 {
-        api.set(
-            dx,
-            dy,
-            Cell {
-                species: Species::Ice,
                 ra: cell.ra,
                 rb: cell.rb,
                 clock: 0,
