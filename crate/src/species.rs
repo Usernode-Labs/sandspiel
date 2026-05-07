@@ -1245,20 +1245,27 @@ pub fn update_acid(cell: Cell, mut api: SandApi) {
         api.set(0, 0, EMPTY_CELL);
         api.set(-dx, 0, cell);
     } else {
-        if api.get(0, 1).species != Species::Wall && api.get(0, 1).species != Species::Acid {
+        if api.get(0, 1).species != Species::Wall
+            && api.get(0, 1).species != Species::Acid
+            && api.get(0, 1).species != Species::BlackHole
+        {
             api.set(0, 0, EMPTY_CELL);
             api.set(0, 1, degraded);
-        } else if api.get(dx, 0).species != Species::Wall && api.get(dx, 0).species != Species::Acid
+        } else if api.get(dx, 0).species != Species::Wall
+            && api.get(dx, 0).species != Species::Acid
+            && api.get(dx, 0).species != Species::BlackHole
         {
             api.set(0, 0, EMPTY_CELL);
             api.set(dx, 0, degraded);
         } else if api.get(-dx, 0).species != Species::Wall
             && api.get(-dx, 0).species != Species::Acid
+            && api.get(-dx, 0).species != Species::BlackHole
         {
             api.set(0, 0, EMPTY_CELL);
             api.set(-dx, 0, degraded);
         } else if api.get(0, -1).species != Species::Wall
             && api.get(0, -1).species != Species::Acid
+            && api.get(0, -1).species != Species::BlackHole
             && api.get(0, -1).species != Species::Empty
         {
             api.set(0, 0, EMPTY_CELL);
