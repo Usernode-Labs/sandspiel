@@ -39,6 +39,8 @@ pub enum Species {
     SandSource = 21,
     Torch = 22,
     OilWell = 23,
+    GasSource = 24,
+    AcidSource = 25,
 }
 
 impl Species {
@@ -67,6 +69,8 @@ impl Species {
             Species::SandSource => update_sand_source(cell, api),
             Species::Torch => update_torch(cell, api),
             Species::OilWell => update_oil_well(cell, api),
+            Species::GasSource => update_gas_source(cell, api),
+            Species::AcidSource => update_acid_source(cell, api),
         }
     }
 }
@@ -1365,6 +1369,27 @@ pub fn update_oil_well(cell: Cell, mut api: SandApi) {
     if api.once_in(4) {
         if api.get(0, 1).species == Species::Empty {
             api.set(0, 1, Cell::new(Species::Oil));
+        }
+    }
+    api.set(0, 0, cell);
+}
+
+pub fn update_gas_source(cell: Cell, mut api: SandApi) {
+    if api.universe.flags & FLAG_SOURCES == 0 { return; }
+    if api.once_in(4) {
+        // Gas is buoyant, so emit it above the source.
+        if api.get(0, -1).species == Species::Empty {
+            api.set(0, -1, Cell::new(Species::Gas));
+        }
+    }
+    api.set(0, 0, cell);
+}
+
+pub fn update_acid_source(cell: Cell, mut api: SandApi) {
+    if api.universe.flags & FLAG_SOURCES == 0 { return; }
+    if api.once_in(4) {
+        if api.get(0, 1).species == Species::Empty {
+            api.set(0, 1, Cell::new(Species::Acid));
         }
     }
     api.set(0, 0, cell);

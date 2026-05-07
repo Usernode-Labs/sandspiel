@@ -410,6 +410,8 @@ impl Universe {
             Species::SandSource => 500,
             Species::Torch => 500,
             Species::OilWell => 500,
+            Species::GasSource => 500,
+            Species::AcidSource => 500,
 
             Species::Stone => 70,
             Species::Wood => 70,
