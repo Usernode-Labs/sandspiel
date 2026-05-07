@@ -643,6 +643,24 @@ pub fn update_fire(cell: Cell, mut api: SandApi) {
             },
         );
     }
+    // Mirror the plant case: fire actively ignites adjacent fungus on a
+    // 1-in-3 sample. Fungus stays Fungus (so its own update keeps running
+    // through the burn-down) but rb is set to the burn timer.
+    if api.get(dx, dy).species == Species::Fungus && api.once_in(3) {
+        let nbr = api.get(dx, dy);
+        if nbr.rb == 0 {
+            api.set(
+                dx,
+                dy,
+                Cell {
+                    species: Species::Fungus,
+                    ra: nbr.ra,
+                    rb: 4,
+                    clock: 0,
+                },
+            );
+        }
+    }
     if ra < 5 || api.get(dx, dy).species == Species::Water {
         api.set(0, 0, EMPTY_CELL);
     } else if api.get(dx, dy).species == Species::Empty {
@@ -1081,6 +1099,10 @@ pub fn update_fungus(cell: Cell, mut api: SandApi) {
     let (dx, dy) = api.rand_vec();
 
     let nbr_species = api.get(dx, dy).species;
+    // Burn timer dropped from 10 → 4 so once a fungus cell catches fire
+    // it dies within ~4 ticks. Combined with fire's new active ignition
+    // path against fungus (see update_fire), fire is now a reliable
+    // countermeasure to fungus growth.
     if rb == 0 && nbr_species == Species::Fire || nbr_species == Species::Lava {
         api.set(
             0,
@@ -1088,7 +1110,7 @@ pub fn update_fungus(cell: Cell, mut api: SandApi) {
             Cell {
                 species: Species::Fungus,
                 ra: cell.ra,
-                rb: 10,
+                rb: 4,
                 clock: 0,
             },
         );
